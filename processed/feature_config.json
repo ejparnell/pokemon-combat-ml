@@ -1,0 +1,40 @@
+{
+  "numeric_features": [
+    "a_hp",
+    "a_attack",
+    "a_defense",
+    "a_sp_atk",
+    "a_sp_def",
+    "a_speed",
+    "b_hp",
+    "b_attack",
+    "b_defense",
+    "b_sp_atk",
+    "b_sp_def",
+    "b_speed",
+    "speed_diff",
+    "bst_diff",
+    "hp_diff",
+    "a_bst",
+    "b_bst",
+    "a_atk_def_ratio",
+    "b_atk_def_ratio",
+    "atk_def_ratio_diff",
+    "a_sp_ratio",
+    "b_sp_ratio",
+    "sp_ratio_diff"
+  ],
+  "categorical_features": [
+    "a_type_1",
+    "a_type_2",
+    "b_type_1",
+    "b_type_2",
+    "a_generation",
+    "b_generation",
+    "a_legendary",
+    "b_legendary"
+  ],
+  "target": "did_a_win",
+  "description": "Comprehensive Pokemon battle prediction features",
+  "pipeline_version": "educational_v1"
+}
