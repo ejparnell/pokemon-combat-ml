@@ -19,7 +19,7 @@ Learn how to wrap your trained machine learning model with a professional FastAP
 - [Step 11: Testing Your API](#step-11-testing-your-api)
 - [Step 12: Production Considerations](#step-12-production-considerations)
 
-## 🎯 Overview
+## Overview
 
 In this lesson, you'll learn how to transform your Jupyter notebook-based Pokemon battle prediction model into a production-ready API. We'll cover:
 
@@ -40,7 +40,7 @@ By the end of this lesson, you'll have a complete API that can:
 - Provide detailed battle analysis
 - Auto-generate interactive documentation
 
-## 📚 Prerequisites
+## Prerequisites
 
 Before starting, ensure you have:
 
@@ -711,6 +711,7 @@ async def list_pokemon(limit: int = 100, offset: int = 0):
 ```
 
 **Learning Points**:
+
 - Path parameters (`{name}`) capture URL segments
 - Query parameters provide optional filtering/pagination
 - HTTPException creates proper error responses

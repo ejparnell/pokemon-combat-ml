@@ -72,6 +72,15 @@ class PokemonInfo(BaseModel):
     legendary: bool
     generation: int
 
+class PokemonListItem(BaseModel):
+    """Pokemon list item with basic info"""
+    name: str
+    original_name: str
+    types: List[str]
+    total_stats: int
+    legendary: bool
+    generation: int
+
 # Global variables for model and data
 model = None
 pokemon_data = None
@@ -500,6 +509,7 @@ async def list_pokemon(limit: int = 100, offset: int = 0):
     pokemon_list = pokemon_data.iloc[offset:offset+limit]
     
     pokemon_results = []
+    
     for _, row in pokemon_list.iterrows():
         original_cleaned_name = row['name']  # This is the name from the CSV
         display_cleaned_name = original_cleaned_name  # Default display name
@@ -538,15 +548,17 @@ async def list_pokemon(limit: int = 100, offset: int = 0):
         speed = int(row['speed']) if pd.notna(row['speed']) else 0
         generation = int(row['generation']) if pd.notna(row['generation']) else 1
         
-        pokemon_results.append({
+        pokemon_result = {
             "name": display_cleaned_name,  # The cleaned name for display (with symbols for Nidoran)
             "original_name": original_name,  # The original name from pokemon.csv
             "types": types,
             "total_stats": hp + attack + defense + sp_atk + sp_def + speed,
             "legendary": bool(row['legendary']) if pd.notna(row['legendary']) else False,
             "generation": generation
-        })
-    
+        }
+        
+        pokemon_results.append(pokemon_result)
+
     return {
         "total": total,
         "limit": limit,
@@ -664,7 +676,3 @@ async def get_model_info():
         "total_features": len(feature_config.get('numeric_features', []) + feature_config.get('categorical_features', [])) if feature_config else 0,
         "pokemon_database_size": len(pokemon_data) if pokemon_data is not None else 0
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

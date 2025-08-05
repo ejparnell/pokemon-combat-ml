@@ -36,7 +36,9 @@ This API provides machine learning-powered Pokemon battle predictions with:
 
 ### Name Mapping
 
-The API handles Pokemon name cleaning that was required during model training. For example, Pokemon names like "Farfetch'd" were cleaned for compatibility. The API now returns both versions:
+The API handles Pokemon name cleaning that was required during model training.
+
+For example, Pokemon names like "Farfetch'd" were cleaned for compatibility. The API now returns both versions:
 
 - **`name`**: The cleaned name used during model training
 - **`original_name`**: The original name from the source Pokemon CSV file
@@ -371,6 +373,7 @@ const searchPokemon = async (pokemonName) => {
     
     const pokemon = await response.json();
     console.log('Found Pokemon:', pokemon);
+    
     return pokemon;
   } catch (error) {
     console.error('Search failed:', error);
@@ -380,6 +383,29 @@ const searchPokemon = async (pokemonName) => {
 
 // Usage
 const pikachu = await searchPokemon('Pikachu');
+```
+
+#### List Pokemon
+
+```javascript
+// Get Pokemon list
+const getPokemonList = async (limit = 100, offset = 0) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/pokemon/list?limit=${limit}&offset=${offset}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch Pokemon list:', error);
+    return null;
+  }
+};
 ```
 
 #### Battle Prediction Example
@@ -422,26 +448,80 @@ import React, { useState } from 'react';
 
 const API_BASE = 'http://localhost:8000';
 
+// Pokemon Card Component
+function PokemonCard({ pokemon, onSelect, selected }) {
+  return (
+    <div 
+      className={`pokemon-card ${selected ? 'selected' : ''}`}
+      onClick={() => onSelect(pokemon)}
+    >
+      <h3>{pokemon.original_name}</h3>
+      <p>Types: {pokemon.types.join(', ')}</p>
+      <p>Total Stats: {pokemon.total_stats}</p>
+      {pokemon.legendary && <span className="legendary">⭐ Legendary</span>}
+    </div>
+  );
+}
+
+// Pokemon Selector
+function PokemonSelector({ onSelect, label }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResult, setSearchResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const searchPokemon = async () => {
+    if (!searchTerm.trim()) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/pokemon/search/${searchTerm}`);
+      if (response.ok) {
+        const pokemon = await response.json();
+        setSearchResult(pokemon);
+      } else {
+        setSearchResult(null);
+        alert('Pokemon not found!');
+      }
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="pokemon-selector">
+      <label>{label}</label>
+      <div className="search-container">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Enter Pokemon name..."
+          onKeyPress={(e) => e.key === 'Enter' && searchPokemon()}
+        />
+        <button onClick={searchPokemon} disabled={loading}>
+          {loading ? 'Searching...' : 'Search'}
+        </button>
+      </div>
+      
+      {searchResult && (
+        <PokemonCard 
+          pokemon={searchResult} 
+          onSelect={onSelect}
+          selected={true}
+        />
+      )}
+    </div>
+  );
+}
+
 function BattlePredictor() {
   const [pokemonA, setPokemonA] = useState(null);
   const [pokemonB, setPokemonB] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Search for Pokemon
-  const searchPokemon = async (name) => {
-    try {
-      const response = await fetch(`${API_BASE}/pokemon/search/${name}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Pokemon not found:', error);
-      return null;
-    }
-  };
 
   // Predict battle outcome
   const predictBattle = async () => {
@@ -524,8 +604,40 @@ function BattlePredictor() {
 
       {/* Results Display */}
       {prediction && (
-        <BattleResults prediction={prediction} />
+        <BattleResults prediction={prediction} pokemonA={pokemonA} pokemonB={pokemonB} />
       )}
+    </div>
+  );
+}
+
+// Battle Results Component
+function BattleResults({ prediction, pokemonA, pokemonB }) {
+  const winner = prediction.winner_prediction === 'pokemon_a' ? pokemonA : pokemonB;
+
+  return (
+    <div className="battle-results">
+      <h2>🏆 Battle Results</h2>
+      
+      <div className="winner-section">
+        <h3>Winner: {winner.original_name}!</h3>
+        <p>Confidence: {(prediction.confidence * 100).toFixed(1)}%</p>
+      </div>
+      
+      <div className="battle-analysis">
+        <h4>Battle Analysis:</h4>
+        {Object.entries(prediction.battle_analysis).map(([key, value]) => (
+          <p key={key}><strong>{key}:</strong> {value}</p>
+        ))}
+      </div>
+      
+      <div className="key-factors">
+        <h4>Key Factors:</h4>
+        <ul>
+          {prediction.key_factors.map((factor, index) => (
+            <li key={index}>{factor}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
